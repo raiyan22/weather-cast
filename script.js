@@ -19,7 +19,7 @@ async function getWeather() {
         });
         const currentTemperature = response.data.list[0].main.temp;
 
-        document.querySelector('.weather-temp').textContent = Math.round(currentTemperature) + '°C';
+        document.querySelector('.weather-temp').textContent = Math.round(currentTemperature)-1 + '°C';
 
         const forecastData = response.data.list;
 
@@ -68,7 +68,11 @@ async function getWeather() {
             const day = Object.keys(dailyForecast)[index];
             const data = dailyForecast[day];
             dayElement.textContent = day;
-            tempElements[index].textContent = `${Math.round(data.minTemp)}º / ${Math.round(data.maxTemp)}º`;
+            tempElements[index].textContent = `${Math.round(data.minTemp)}° / ${Math.round(data.maxTemp)}°`;
+
+            // edit
+            // document.querySelector('.weather-temp').textContent = Math.round(data.minTemp) + '°C';
+
             iconElements[index].innerHTML = getWeatherIcon(data.icon);
         });
 
