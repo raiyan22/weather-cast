@@ -118,7 +118,7 @@ search.addEventListener('click', () => {
                         cloneInfoHumidityFirst.remove();
                         cloneInfoWindFirst.remove();
                     }, 2200);
-                    
+
                 }
             }
         });
