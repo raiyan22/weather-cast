@@ -1,128 +1,89 @@
-const container = document.querySelector('.container');
-const search = document.querySelector('.search-box button');
-const weatherBox = document.querySelector('.weather-box');
-const weatherDetails = document.querySelector('.weather-details');
-const error404 = document.querySelector('.not-found');
-const cityHide = document.querySelector('.city-hide');
 
-search.addEventListener('click', () => {
-    const APIKey = '96e7d34e5f17486a2ba26ebcc6c90ec7';
-    const city = document.querySelector('.search-box input').value;
 
-    if (city == '')
-        return;
+document.getElementById('city').addEventListener('input', function () {
+    var city = this.value;
+    getWeather(city);
+});
 
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${APIKey}`)
-        .then(response => response.json()).then(json => {
+async function getWeather() {
+    try {
+        var city = document.getElementById('city').value;
+        console.log('City name: ', city);
 
-            if (json.code == '404') {
-                cityHide.textContent = city;
-                container.style.height = '400px';
-                weatherBox.classList.remove('active');
-                weatherDetails.classList.remove('active');
-                error404.classList.add('active');
-                return;
-            }
+        const response = await axios.get('https://api.openweathermap.org/data/2.5/forecast', {
+            params: {
+                q: city,
+                appid: '96e7d34e5f17486a2ba26ebcc6c90ec7', 
+                units: 'metric'
+            },
+        });
+        const currentTemperature = response.data.list[0].main.temp;
 
-            const image = document.querySelector('.weather-box img');
-            const temperature = document.querySelector('.weather-box .temperature');
-            const description = document.querySelector('.weather-box .description');
-            const humidity = document.querySelector('.weather-details .humidity span');
-            const wind = document.querySelector('.weather-details .wind span');
+        document.querySelector('.weather-temp').textContent = Math.round(currentTemperature) + '°C';
 
-            if (cityHide.textContent == city) {
-                return;
+        const forecastData = response.data.list;
+
+        const dailyForecast = {};
+        forecastData.forEach((data) => {
+            const day = new Date(data.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' });
+            if (!dailyForecast[day]) {
+                dailyForecast[day] = {
+                    minTemp: data.main.temp_min,
+                    maxTemp: data.main.temp_max,
+                    description: data.weather[0].description,
+                    humidity: data.main.humidity,
+                    windSpeed: data.wind.speed,
+                    icon: data.weather[0].icon,
+
+
+                };
             } else {
-                cityHide.textContent = city;
-
-                container.style.height = '555px';
-
-                container.classList.add('active');
-                weatherBox.classList.add('active');
-                weatherDetails.classList.add('active');
-                error404.classList.remove('active');
-
-                setTimeout(() => {
-                    container.classList.remove('active');
-                }, 2500);
-
-                switch (json.weather[0].main) {
-                    case 'Clear':
-                        image.src = 'images/clear.png';
-                        break;
-                    case 'Rain':
-                        image.src = 'images/rain.png';
-                        break;
-                    case 'Snow':
-                        image.src = 'images/snow.png';
-                        break;
-                    case 'Clouds':
-                        image.src = 'images/clouds.png';
-                        break;
-                    case 'Mist':
-                        image.src = 'images/clear.png';
-                        break;
-                    case 'Haze':
-                        image.src = 'images/clear.png';
-                        break;
-                    default:
-                        image.src = 'images/clouds.png';
-                }
-
-                temperature.innerHTML = `${parseInt(json.main.temp)}<span>°C</span>`;
-                description.innerHTML = `${json.weather[0].description}`;
-                humidity.innerHTML = `${json.main.humidity}%`;
-                wind.innerHTML = `${parseInt(json.wind.speed)}Km/h`;
-
-                const infoWeather = document.querySelector('.info-weather');
-                const infoHumidity = document.querySelector('.info-humidity');
-                const infoWind = document.querySelector('.info-wind');
-
-                const elCloneInfoWeather = infoWeather.cloneNode(true);
-                const elCloneInfoHumidity = infoHumidity.cloneNode(true);
-                const elCloneInfoWind = infoWind.cloneNode(true);
-
-                elCloneInfoWeather.id = 'clone-info-weather';
-                elCloneInfoWeather.classList.add('active-clone');
-
-                elCloneInfoHumidity.id = 'clone-info-humidity';
-                elCloneInfoHumidity.classList.add('active-clone');
-
-                elCloneInfoWind.id = 'clone-info-wind';
-                elCloneInfoWind.classList.add('active-clone');
-
-                setTimeout(() => {
-                    infoWeather.insertAdjacentElement("afterend", elCloneInfoWeather);
-                    infoHumidity.insertAdjacentElement("afterend", elCloneInfoHumidity);
-                    infoWind.insertAdjacentElement("afterend", elCloneInfoWind);
-                }, 2200);
-
-                const cloneInfoWeather = document.querySelectorAll('.info-weather.active-clone');
-                const totalCloneInfoWeather = cloneInfoWeather.length;
-                const cloneInfoWeatherFirst = cloneInfoWeather[0];
-
-                const cloneInfoHumidity = document.querySelectorAll('.info-humidity.active-clone');
-                const cloneInfoHumidityFirst = cloneInfoHumidity[0];
-
-                const cloneInfoWind = document.querySelectorAll('.info-wind.active-clone');
-                const cloneInfoWindFirst = cloneInfoWind[0];
-
-                if (totalCloneInfoWeather > 0) {
-
-                    cloneInfoWeatherFirst.classList.remove('active-clone');
-                    cloneInfoHumidityFirst.classList.remove('active-clone');
-                    cloneInfoWindFirst.classList.remove('active-clone');
-
-                    setTimeout(() => {
-                        cloneInfoWeatherFirst.remove();
-                        cloneInfoHumidityFirst.remove();
-                        cloneInfoWindFirst.remove();
-                    }, 2200);
-
-                }
+                dailyForecast[day].minTemp = Math.min(dailyForecast[day].minTemp, data.main.temp_min);
+                dailyForecast[day].maxTemp = Math.max(dailyForecast[day].maxTemp, data.main.temp_max);
             }
         });
 
+        document.querySelector('.date-dayname').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-    1
+        const date = new Date().toUTCString();
+        const extractedDateTime = date.slice(5, 16);
+        document.querySelector('.date-day').textContent = extractedDateTime.toLocaleString('en-US');
+
+        const currentWeatherIconCode = dailyForecast[new Date().toLocaleDateString('en-US', { weekday: 'long' })].icon;
+        const weatherIconElement = document.querySelector('.weather-icon');
+        weatherIconElement.innerHTML = getWeatherIcon(currentWeatherIconCode);
+
+        document.querySelector('.location').textContent = response.data.city.name;
+        document.querySelector('.weather-desc').textContent = dailyForecast[new Date().toLocaleDateString('en-US', { weekday: 'long' })].description.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+        document.querySelector('.humidity .value').textContent = dailyForecast[new Date().toLocaleDateString('en-US', { weekday: 'long' })].humidity + ' %';
+        document.querySelector('.wind .value').textContent = dailyForecast[new Date().toLocaleDateString('en-US', { weekday: 'long' })].windSpeed + ' m/s';
+
+
+        const dayElements = document.querySelectorAll('.day-name');
+        const tempElements = document.querySelectorAll('.day-temp');
+        const iconElements = document.querySelectorAll('.day-icon');
+
+        dayElements.forEach((dayElement, index) => {
+            const day = Object.keys(dailyForecast)[index];
+            const data = dailyForecast[day];
+            dayElement.textContent = day;
+            tempElements[index].textContent = `${Math.round(data.minTemp)}º / ${Math.round(data.maxTemp)}º`;
+            iconElements[index].innerHTML = getWeatherIcon(data.icon);
+        });
+
+    } catch (error) {
+        console.error('An error occurred while retrieving data', error.message);
+    }
+}
+
+function getWeatherIcon(iconCode) {
+    const iconBaseUrl = 'https://openweathermap.org/img/wn/';
+    const iconSize = '@2x.png';
+    return `<img src="${iconBaseUrl}${iconCode}${iconSize}" alt="Weather Icon">`;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    getWeather();
+    setInterval(getWeather, 900000);
 });
