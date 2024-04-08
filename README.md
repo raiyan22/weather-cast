@@ -1,6 +1,8 @@
 ## Overview
 A very simple project that serves the purpose of displaying the weather conditions with a minimal and intuitive design.
 
+### Live Demo is available 👉[here](https://weather-cast-nblb.onrender.com/)
+
 ## Features
 - User can write the name of the city to get the weather status for upto three days
 - Apart from the temperature user can also see the wind speed and the humidity of a specific city
